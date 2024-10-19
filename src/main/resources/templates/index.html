@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Node Creation</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+
+        #title {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #3498db; /* Use a fun color */
+        }
+
+        #container {
+            text-align: center;
+        }
+
+        button {
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #183c65;
+        }
+
+        #node {
+            display: none;
+            margin-top: 20px;
+        }
+
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            width: 150px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 10px;
+            background-color: #fff;
+            border: 2px solid #3498db;
+
+        }
+
+        table, th, td {
+            border: 1px solid #3498db;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        #nodeTable {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="title">Node Creation</div>
+
+    <div id="container">
+        <button id="newNode">New Node</button>
+        <button id="submit" hidden>Submit</button>
+
+        <div id="node" hidden>
+            <p>How many nodes?</p>
+            <div>
+                <input id="nodeAmount" type="number">
+                <button id="btnAmount">Submit</button>
+            </div>
+        </div>
+    <div id="nodeTable"></div>
+</div>
+
+<script>
+    var dataArray = [];
+    var nodeCounter = 0;
+    var adjCounter = 0;
+    var iterationCounter = 0;
+    var source;
+    var target;
+
+    document.getElementById("newNode").onclick = function() {
+        event.preventDefault();
+        document.getElementById("newNode").style.display = 'none';
+        document.getElementById("node").style.display = 'block';
+    };
+    
+    document.getElementById("btnAmount").onclick = function() {
+        event.preventDefault();
+        document.getElementById("node").style.display = 'none';
+        createNode(document.getElementById("nodeAmount").value, 0);
+    };
+
+    function post_to_url(path, params, params2, method) {
+        method = method || "post";
+    
+        var form = document.createElement("form");
+        form.setAttribute("method", method);
+        form.setAttribute("action", path);
+        
+        var hiddenField = document.createElement("input");
+        hiddenField.setAttribute("type", "hidden");
+        hiddenField.setAttribute("name", "weight");
+        hiddenField.setAttribute("value", params);
+        form.appendChild(hiddenField);
+
+        var hiddenField = document.createElement("input");
+        hiddenField.setAttribute("type", "hidden");
+        hiddenField.setAttribute("name", "nodeAmount");
+        hiddenField.setAttribute("value", params2);
+        form.appendChild(hiddenField);
+    
+        document.body.appendChild(form);
+        form.submit();
+    }
+    
+    async function createNode(nodeAmount, iteration) {
+        var table = document.createElement('table');
+        var tr = document.createElement('tr');
+        var textTop = document.createTextNode("Node " + String.fromCharCode(65 + iterationCounter));
+        tr.appendChild(textTop)
+        table.appendChild(tr);
+        
+        for (var i = 0; i < nodeAmount; i++){
+            var tr = document.createElement('tr');   
+            var td1 = document.createElement('td');
+            var input1 = document.createTextNode("Node " + String.fromCharCode(65 + nodeCounter));
+            
+            if (i != iteration) {
+                var td2 = document.createElement('td');
+                var text2 = document.createElement('input');
+                text2.id = adjCounter;
+                text2.type = 'number';
+                text2.placeholder = 'Weight';
+                td1.appendChild(input1);
+                tr.appendChild(td1);
+                td2.appendChild(text2);
+                tr.appendChild(td2);
+                table.appendChild(tr);
+            }
+            adjCounter++;
+            nodeCounter++;
+        }
+        var submit = document.createElement('button');
+        submit.innerText = "submit";
+        submit.onclick = async function() {
+            event.preventDefault();
+            adjCounter = 0;
+            nodeCounter = 0;
+            for (var i = 0; i < nodeAmount; i++) {
+                if (i != iterationCounter) {
+                    if (document.getElementById(i).value) {
+                        dataArray.push(document.getElementById(i).value);
+                    } else {
+                        dataArray.push(-1);
+                    }
+                }
+            }
+            document.getElementById(iterationCounter).remove();
+            iterationCounter++;
+            createNode(nodeAmount, iterationCounter);
+        };
+
+        if (iterationCounter < nodeAmount){
+            table.id = iterationCounter;
+            table.style.display = 'block';
+            table.appendChild(submit);
+            document.getElementById("nodeTable").appendChild(table);
+        } else if (iterationCounter == nodeAmount) {
+            var table2 = document.createElement('table');
+            var tdSource = document.createElement('td');
+            var txSource = document.createTextNode("Source Node :\t");
+            var inSource = document.createElement('input');
+            var tdTarget = document.createElement('td');
+            var txTarget = document.createTextNode("Target Node :\t");
+            var inTarget = document.createElement('input');
+            
+            tdSource.appendChild(txSource);
+            tdSource.appendChild(inSource);
+            tdTarget.appendChild(txTarget);
+            tdTarget.appendChild(inTarget);
+
+            var trSource = document.createElement('tr');
+            trSource.appendChild(tdSource);
+            var trTarget = document.createElement('tr');
+            trTarget.appendChild(tdTarget);
+            
+            var tsButton = document.createElement('button');
+            tsButton.innerText = "submit";
+            tsButton.onclick = async function() {
+                event.preventDefault();
+                dataArray.push(inSource.value.charCodeAt(0));
+                dataArray.push(inTarget.value.charCodeAt(0));
+                post_to_url("/", dataArray, nodeAmount, "POST");
+            }
+            
+            table2.appendChild(trSource);
+            table2.appendChild(trTarget);
+            table2.appendChild(tsButton);
+            document.getElementById("nodeTable").appendChild(table2);
+        }
+    }
+
+</script>
+
+</body>
+</html>
